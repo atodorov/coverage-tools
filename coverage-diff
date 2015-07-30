@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+# Diff two coverage files to show gaps between two coverage runs.
+# Original idea by Marc Abramowitz:
+# https://bitbucket.org/ned/coveragepy/pull-requests/33
+
+import sys
+from coverage.data import CoverageData
+
+def do_diff(cov1, cov2):
+    # a map of filenames, line numbers and flag indicating
+    # which test run covered the particular line
+    _diff  = {}
+
+    for fname in cov1.lines:
+        _diff[fname] = cov1.lines[fname]
+
+        # file covered only in the first run
+        if fname not in cov2.lines:
+            for line_num in _diff[fname]:
+                _diff[fname][line_num] = -1
+            continue
+
+        # file covered in both test runs, check which
+        # lines are covered where
+        _first_lines  = cov1.lines[fname].keys()
+        _second_lines = cov2.lines[fname].keys()
+        for line_num in _first_lines:
+            if line_num in _second_lines:
+                _diff[fname][line_num] = 0 # covered by both files
+            else:
+                _diff[fname][line_num] = -1 # covered by 1st file
+
+        for line_num in _second_lines:
+            if line_num not in _first_lines:
+                _diff[fname][line_num] = 1 # covered by 2nd file
+
+    for fname in cov2.lines:
+        # file covered only in the second run
+        if fname not in cov1.lines:
+            _diff[fname] = cov2.lines[fname]
+            for line_num in _diff[fname]:
+                _diff[fname][line_num] = 1
+            continue
+
+    return _diff
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print "%s <file1> <file2>" % __file__
+        sys.exit(1)
+
+    data1 = CoverageData(sys.argv[1])
+    data1.read()
+
+    data2 = CoverageData(sys.argv[2])
+    data2.read()
+
+    do_diff(data1, data2)
