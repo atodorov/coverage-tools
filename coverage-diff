@@ -27,98 +27,21 @@
 # https://bitbucket.org/ned/coveragepy/pull-requests/33
 
 import sys
-import difflib
 from coverage import coverage
 from coverage.data import CoverageData
-from coverage.misc import CoverageException
-from coverage.summary import SummaryReporter
+from coverage_tools.utils import do_diff
 
-def do_diff(cov1, cov2):
-    result = []
+if len(sys.argv) != 3:
+    print "%s <file1> <file2>" % __file__
+    sys.exit(1)
 
-    src1 = annotate_sources(cov1)
-    src2 = annotate_sources(cov2)
-    fnames = sorted(set(src1.keys() + src2.keys()))
+cov1 = coverage()
+cov1.data = CoverageData(sys.argv[1])
+cov1.data.read()
 
-    for fname in fnames:
-        if src1.has_key(fname):
-            s1 = src1[fname]
-        else:
-            s1 = []
+cov2 = coverage()
+cov2.data = CoverageData(sys.argv[2])
+cov2.data.read()
 
-        if src2.has_key(fname):
-            s2 = src2[fname]
-        else:
-            s2 = []
-
-        for line in difflib.unified_diff(s1, s2, fromfile=fname, tofile=fname, lineterm=""):
-            result.append(line)
-
-    return result
-
-def annotate_sources(cov):
-    """
-        Returns a map of source files where
-        where missing lines are annotated with
-        - if missing and
-        + if executed.
-    """
-    result = {}
-    reporter = SummaryReporter(cov, cov.config)
-    reporter.find_code_units(None)
-    for cu in reporter.code_units:
-        try:
-            src = []
-            source = cu.source_file().read().split('\n')
-            analysis = cov._analyze(cu)
-
-            executed = cov.data.executed_lines(cu.filename)
-            missing = sorted(set(analysis.statements) - set(executed))
-
-            i = 1
-            for line in source:
-#todo: for some reason in my coverage data the line for if statements and
-# function definitions are reported as missing
-                if i in missing:
-                    src.append("- %s" % line)
-                    rng = analysis.parser.multiline.get(i)
-                    if rng:
-                        missing += range(rng[0], rng[1]+1)
-                else:
-                    src.append("+ %s" % line)
-                i += 1
-
-            result[cu.filename] = src
-        except CoverageException:
-#todo: if a source is missing locally it will not be included in the report
-            pass
-
-    return result
-
-def annotated_src_as_string(src):
-    result = ""
-    for fname in sorted(src.keys()):
-        result += '--- missing/%s\n' % fname.lstrip('/')
-        result += '+++ covered/%s\n' % fname.lstrip('/')
-        for line in src[fname]:
-            result += "%s\n" % line
-
-    return result
-
-if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print "%s <file1> <file2>" % __file__
-        sys.exit(1)
-
-    cov1 = coverage()
-    cov1.data = CoverageData(sys.argv[1])
-    cov1.data.read()
-
-    cov2 = coverage()
-    cov2.data = CoverageData(sys.argv[2])
-    cov2.data.read()
-
-    dif = do_diff(cov1, cov2)
-    print "\n".join(dif)
-#    print annotated_src_as_string(annotate_sources(cov1))
-
+dif = do_diff(cov1, cov2)
+print "\n".join(dif)
