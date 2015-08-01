@@ -78,7 +78,8 @@ def annotated_src_as_string(src):
     for fname in sorted(src.keys()):
         result += '--- missing/%s\n' % fname.lstrip('/')
         result += '+++ covered/%s\n' % fname.lstrip('/')
-        result += "\n".join(src[fname])
+        for line in src[fname]:
+            result += "%s\n" % line
 
     return result
 
