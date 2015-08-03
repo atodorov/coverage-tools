@@ -67,7 +67,6 @@ def annotate_sources(cov, show_lines=False, include=[], exclude=[]):
             # skip all files which are not marked for inclusion
             skip_file = False
             for pattern in include:
-                print pattern
                 if fnmatch(cu.filename, pattern):
                     skip_file = False
                     break
