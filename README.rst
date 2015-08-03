@@ -28,7 +28,14 @@ Changelog
 Version 0.0.3
 
 * New options for **coverage-annotate**
-  * -N - show line numbers
+ ** -N - show line numbers
+ ** -i - list of files to include in the report
+ ** -e - list of files to exclude from the report
+
+`--include` and `--exclude` support shell globs. If none is specified all files in
+the coverage data file are shown. The include list is evaluated first, then the
+exclude list is evaluated.
+
 
 Version 0.0.2
 

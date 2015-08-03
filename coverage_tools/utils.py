@@ -22,6 +22,7 @@
 
 import difflib
 from math import log10
+from fnmatch import fnmatch
 from coverage.misc import CoverageException
 from coverage.summary import SummaryReporter
 
@@ -48,7 +49,7 @@ def do_diff(cov1, cov2):
 
     return result
 
-def annotate_sources(cov, show_line_nums=False):
+def annotate_sources(cov, show_lines=False, include=[], exclude=[]):
     """
         Returns a map of source files where
         where missing lines are annotated with
@@ -62,6 +63,28 @@ def annotate_sources(cov, show_line_nums=False):
         try:
             src = []
             source = cu.source_file().read().strip().split('\n')
+
+            # skip all files which are not marked for inclusion
+            skip_file = False
+            for pattern in include:
+                print pattern
+                if fnmatch(cu.filename, pattern):
+                    skip_file = False
+                    break
+                else:
+                    skip_file = True
+                    # don't break b/c there can be multiple patterns and the
+                    # next one may include the file
+
+            # exclude all files which are marked for exclusion
+            for pattern in exclude:
+                if fnmatch(cu.filename, pattern):
+                    skip_file = True
+                    break
+
+            if skip_file:
+                continue
+
             analysis = cov._analyze(cu)
 
             executed = cov.data.executed_lines(cu.filename)
@@ -81,7 +104,7 @@ def annotate_sources(cov, show_line_nums=False):
 
                 # +1 b/c of log10, +1 leading space
                 width = int(log10(len(source))) + 2
-                if show_line_nums:
+                if show_lines:
                     line = '{n: {w}} {l}'.format(n=i, w=width, l=line)
 
                 src.append(line)

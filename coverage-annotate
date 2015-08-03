@@ -33,10 +33,12 @@ from optparse import OptionParser
 parser = OptionParser(usage="usage: %s [options] <coverage_file(s)>" % __file__)
 parser.add_option("-N", "--line-numbers", action="store_true",
                     dest="line_numbers", help="show line numbers")
-parser.add_option("-i", "--include", action="append",
-                    dest="include", help="files to include in report")
-parser.add_option("-e", "--exclude", action="append",
-                    dest="exclude", help="files to exclude from report")
+parser.add_option("-i", "--include", action="append", default=[],
+                    dest="include",
+                    help="files to include in report. Supports shell globs.")
+parser.add_option("-e", "--exclude", action="append", default=[],
+                    dest="exclude",
+                    help="files to exclude from report. Supports shell globs.")
 
 (options, args) = parser.parse_args()
 
@@ -49,5 +51,6 @@ for f in args:
     cov1.data = CoverageData(f)
     cov1.data.read()
 
-    ann = annotate_sources(cov1, options.line_numbers)
+    ann = annotate_sources(cov1, options.line_numbers,
+                            options.include, options.exclude)
     print annotated_src_as_string(ann)
