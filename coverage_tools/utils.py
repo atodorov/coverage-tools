@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 import difflib
+from math import log10
 from coverage.misc import CoverageException
 from coverage.summary import SummaryReporter
 
@@ -47,7 +48,7 @@ def do_diff(cov1, cov2):
 
     return result
 
-def annotate_sources(cov):
+def annotate_sources(cov, show_line_nums=False):
     """
         Returns a map of source files where
         where missing lines are annotated with
@@ -60,7 +61,7 @@ def annotate_sources(cov):
     for cu in reporter.code_units:
         try:
             src = []
-            source = cu.source_file().read().split('\n')
+            source = cu.source_file().read().strip().split('\n')
             analysis = cov._analyze(cu)
 
             executed = cov.data.executed_lines(cu.filename)
@@ -71,12 +72,19 @@ def annotate_sources(cov):
 #todo: for some reason in my coverage data the line for if statements and
 # function definitions are reported as missing
                 if i in missing:
-                    src.append("- %s" % line)
+                    line = "- %s" % line
                     rng = analysis.parser.multiline.get(i)
                     if rng:
                         missing += range(rng[0], rng[1]+1)
                 else:
-                    src.append("+ %s" % line)
+                    line = "+ %s" % line
+
+                # +1 b/c of log10, +1 leading space
+                width = int(log10(len(source))) + 2
+                if show_line_nums:
+                    line = '{n: {w}} {l}'.format(n=i, w=width, l=line)
+
+                src.append(line)
                 i += 1
 
             result[cu.filename] = src

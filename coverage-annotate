@@ -28,14 +28,26 @@ import sys
 from coverage import coverage
 from coverage.data import CoverageData
 from coverage_tools.utils import *
+from optparse import OptionParser
 
-if len(sys.argv) != 2:
-    print "%s <coverage_file>" % __file__
+parser = OptionParser(usage="usage: %s [options] <coverage_file(s)>" % __file__)
+parser.add_option("-N", "--line-numbers", action="store_true",
+                    dest="line_numbers", help="show line numbers")
+parser.add_option("-i", "--include", action="append",
+                    dest="include", help="files to include in report")
+parser.add_option("-e", "--exclude", action="append",
+                    dest="exclude", help="files to exclude from report")
+
+(options, args) = parser.parse_args()
+
+if len(args) < 1:
+    sys.stderr.write(parser.usage+"\n")
     sys.exit(1)
 
-cov1 = coverage()
-cov1.data = CoverageData(sys.argv[1])
-cov1.data.read()
+for f in args:
+    cov1 = coverage()
+    cov1.data = CoverageData(f)
+    cov1.data.read()
 
-ann = annotate_sources(cov1)
-print annotated_src_as_string(ann)
+    ann = annotate_sources(cov1, options.line_numbers)
+    print annotated_src_as_string(ann)
