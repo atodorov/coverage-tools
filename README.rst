@@ -10,7 +10,7 @@ Available tools include:
 * coverage-annotate - prints the source code and prefixes each line with + or -
   depending on wheather it was executed during testing or not;
 * coverage-diff - compares the annotated sources from two coverage data files to
-highlight the difference in test coverage between them;
+  highlight the difference in test coverage between them;
 
 
 Installation
