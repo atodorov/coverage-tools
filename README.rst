@@ -37,6 +37,13 @@ Version 0.0.3
 the coverage data file are shown. The include list is evaluated first, then the
 exclude list is evaluated.
 
+* New options for **coverage-diff**
+
+  * -N - show line numbers
+  * -i - list of files to include in the report
+  * -e - list of files to exclude from the report
+
+The same limitations apply to all options.
 
 Version 0.0.2
 

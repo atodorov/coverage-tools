@@ -30,18 +30,32 @@ import sys
 from coverage import coverage
 from coverage.data import CoverageData
 from coverage_tools.utils import do_diff
+from optparse import OptionParser
 
-if len(sys.argv) != 3:
-    print "%s <file1> <file2>" % __file__
+parser = OptionParser(usage="usage: %s [options] <file1> <file2>" % __file__)
+parser.add_option("-N", "--line-numbers", action="store_true",
+                    dest="line_numbers", help="show line numbers")
+parser.add_option("-i", "--include", action="append", default=[],
+                    dest="include",
+                    help="files to include in report. Supports shell globs.")
+parser.add_option("-e", "--exclude", action="append", default=[],
+                    dest="exclude",
+                    help="files to exclude from report. Supports shell globs.")
+
+(options, args) = parser.parse_args()
+
+if len(args) != 2:
+    sys.stderr.write(parser.usage+"\n")
     sys.exit(1)
 
 cov1 = coverage()
-cov1.data = CoverageData(sys.argv[1])
+cov1.data = CoverageData(args[0])
 cov1.data.read()
 
 cov2 = coverage()
-cov2.data = CoverageData(sys.argv[2])
+cov2.data = CoverageData(args[1])
 cov2.data.read()
 
-dif = do_diff(cov1, cov2)
+dif = do_diff(cov1, cov2, options.line_numbers,
+                options.include, options.exclude)
 print "\n".join(dif)

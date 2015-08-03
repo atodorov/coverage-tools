@@ -26,11 +26,11 @@ from fnmatch import fnmatch
 from coverage.misc import CoverageException
 from coverage.summary import SummaryReporter
 
-def do_diff(cov1, cov2):
+def do_diff(cov1, cov2, show_lines=False, include=[], exclude=[]):
     result = []
 
-    src1 = annotate_sources(cov1)
-    src2 = annotate_sources(cov2)
+    src1 = annotate_sources(cov1, show_lines, include, exclude)
+    src2 = annotate_sources(cov2, show_lines, include, exclude)
     fnames = sorted(set(src1.keys() + src2.keys()))
 
     for fname in fnames:
@@ -44,7 +44,10 @@ def do_diff(cov1, cov2):
         else:
             s2 = []
 
-        for line in difflib.unified_diff(s1, s2, fromfile=fname, tofile=fname, lineterm=""):
+        for line in difflib.unified_diff(s1, s2,
+                                        fromfile="a/"+fname.lstrip('/'),
+                                        tofile="b/"+fname.lstrip('/'),
+                                        lineterm=""):
             result.append(line)
 
     return result
