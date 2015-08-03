@@ -23,8 +23,30 @@
 import difflib
 from math import log10
 from fnmatch import fnmatch
+from coverage.backward import iitems
+from coverage.files import PathAliases
 from coverage.misc import CoverageException
 from coverage.summary import SummaryReporter
+
+try:
+    from pip.commands.search import compare_versions
+except ImportError:
+    from distutils.version import StrictVersion, LooseVersion
+
+    def compare_versions(version1, version2):
+        """ Copied from pip """
+        try:
+            return cmp(StrictVersion(version1), StrictVersion(version2))
+        # in case of abnormal version number, fall back to LooseVersion
+        except ValueError:
+            pass
+        try:
+            return cmp(LooseVersion(version1), LooseVersion(version2))
+        except TypeError:
+        # certain LooseVersion comparions raise due to unorderable types,
+        # fallback to string comparison
+            return cmp([str(v) for v in LooseVersion(version1).version],
+                       [str(v) for v in LooseVersion(version2).version])
 
 def do_diff(cov1, cov2, show_lines=False, include=[], exclude=[]):
     result = []
@@ -128,3 +150,26 @@ def annotated_src_as_string(src):
             result += "%s\n" % line
 
     return result
+
+
+def coverage36_combine(files, data):
+    """
+        Combine all coverage files from @files
+        into @data.
+
+        Note: this works with coverage 3.6 (and possibly older) versions.
+    """
+
+    aliases = PathAliases()
+
+    for f in files:
+        new_lines, new_arcs = data._read_file(f)
+
+        for filename, file_data in iitems(new_lines):
+            filename = aliases.map(filename)
+            data.lines.setdefault(filename, {}).update(file_data)
+        for filename, file_data in iitems(new_arcs):
+            filename = aliases.map(filename)
+            data.arcs.setdefault(filename, {}).update(file_data)
+
+    return data

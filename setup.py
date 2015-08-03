@@ -12,8 +12,9 @@ config = {
     'version' : '0.0.2',
     'packages' : find_packages(),
     'scripts' : [
-        'coverage-diff',
         'coverage-annotate',
+        'coverage-combine',
+        'coverage-diff',
     ],
     'author' : 'Alexander Todorov',
     'author_email' : 'atodorov@nospam.otb.bg',

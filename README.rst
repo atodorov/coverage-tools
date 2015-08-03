@@ -9,6 +9,7 @@ Available tools include:
 
 * **coverage-annotate** - prints the source code and prefixes each line with + or -
   depending on wheather it was executed during testing or not;
+* **coverage-combine** - combines several .coverage data files into one;
 * **coverage-diff** - compares the annotated sources from two coverage data files to
   highlight the difference in test coverage between them;
 
@@ -44,6 +45,8 @@ exclude list is evaluated.
   * -e - list of files to exclude from the report
 
 The same limitations apply to all options.
+
+* New tool **coverage-combine** which supports shell globs.
 
 Version 0.0.2
 
