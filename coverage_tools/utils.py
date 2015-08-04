@@ -162,8 +162,16 @@ def annotated_src_as_string(src):
     return result
 
 def combine(data_paths, output_file):
-    if compare_versions(__version__, "3.6") >= 0:
+    try:
+        if CoverageData.combine_parallel_data:
+            # use the old API, version 3.6 and 3.7.X
+            data = CoverageData(output_file)
+            data = coverage3x_combine(data_paths, data)
+            data.write()
+    except AttributeError:
         # new versions have better support for combining files
+        # and the method combine_parallel_data() has been moved
+        # to teh new CoverageDataFiles class.
         # see https://bitbucket.org/ned/coveragepy/pull-requests/62
         from coverage.data import CoverageDataFiles
 
@@ -173,11 +181,6 @@ def combine(data_paths, output_file):
         dataf.combine_parallel_data(data, data_paths=data_paths)
 
         data.write_file(output_file)
-    else:
-        # use the old API
-        data = CoverageData(output_file)
-        data = coverage3x_combine(data_paths, data)
-        data.write()
 
 def coverage3x_combine(files, data):
     """
