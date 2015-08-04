@@ -1,0 +1,11 @@
+language: python
+python:
+  - 2.7
+env:
+  - COVERAGE=3.6
+  - COVERAGE=3.7.1
+  - COVERAGE=4.0b1
+install:
+  - pip install coverage==$COVERAGE
+script:
+  - python setup.py test
