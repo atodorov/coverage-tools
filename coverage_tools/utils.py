@@ -24,7 +24,9 @@ import difflib
 from math import log10
 from fnmatch import fnmatch
 from coverage.backward import iitems
+from coverage.data import CoverageData
 from coverage.files import PathAliases
+from coverage.version import __version__
 from coverage.annotate import AnnotateReporter
 
 try:
@@ -159,8 +161,25 @@ def annotated_src_as_string(src):
 
     return result
 
+def combine(data_paths, output_file):
+    if compare_versions(__version__, "3.6") >= 0:
+        # new versions have better support for combining files
+        # see https://bitbucket.org/ned/coveragepy/pull-requests/62
+        from coverage.data import CoverageDataFiles
 
-def coverage36_combine(files, data):
+        data = CoverageData()
+
+        dataf = CoverageDataFiles()
+        dataf.combine_parallel_data(data, data_paths=data_paths)
+
+        data.write_file(output_file)
+    else:
+        # use the old API
+        data = CoverageData(output_file)
+        data = coverage3x_combine(data_paths, data)
+        data.write()
+
+def coverage3x_combine(files, data):
     """
         Combine all coverage files from @files
         into @data.

@@ -26,10 +26,7 @@
 
 import sys
 import glob
-from coverage import coverage
-from coverage.version import __version__
-from coverage.data import CoverageData
-from coverage_tools.utils import *
+from coverage_tools import utils
 from optparse import OptionParser
 
 parser = OptionParser(usage="usage: %s [options] <path1> .. <pathN>" % __file__)
@@ -46,19 +43,4 @@ if len(new_args) < 2:
     sys.stderr.write(parser.usage+"\n")
     sys.exit(1)
 
-if compare_versions(__version__, "3.6") >= 0:
-    # new versions have better support for combining files
-    # see https://bitbucket.org/ned/coveragepy/pull-requests/62
-    from coverage.data import CoverageDataFiles
-
-    data = CoverageData()
-
-    dataf = CoverageDataFiles()
-    dataf.combine_parallel_data(data, data_paths=new_args)
-
-    data.write_file(options.output_file)
-else:
-    # use the old API
-    data = CoverageData(options.output_file)
-    data = coverage36_combine(new_args, data)
-    data.write()
+utils.combine(new_args, options.output_file)
