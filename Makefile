@@ -5,7 +5,10 @@ clean:
 	rm -rf dist/
 	rm -rf *.egg-info/
 
-build:
+test:
+	./setup.py test
+
+build: test
 	./setup.py sdist
 
 upload:

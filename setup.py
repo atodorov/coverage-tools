@@ -2,7 +2,24 @@
 
 import os
 import sys
-from setuptools import setup, find_packages
+import unittest
+from setuptools import setup, find_packages, Command
+
+class TestRunner(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        tests = unittest.defaultTestLoader.discover('.')
+        runner = unittest.runner.TextTestRunner()
+        result = runner.run(tests)
+        sys.exit(not result.wasSuccessful())
+
 
 with open('README.rst') as file:
     long_description = file.read()
@@ -35,7 +52,7 @@ config = {
     ],
     'zip_safe' : False,
     'install_requires' : ['coverage'],
-    'test_suite' : '__main__.execute_tests',
+    'cmdclass': {'test': TestRunner},
 }
 
 setup(**config)
