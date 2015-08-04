@@ -26,28 +26,7 @@ from fnmatch import fnmatch
 from coverage.backward import iitems
 from coverage.data import CoverageData
 from coverage.files import PathAliases
-from coverage.version import __version__
 from coverage.annotate import AnnotateReporter
-
-try:
-    from pip.commands.search import compare_versions
-except ImportError:
-    from distutils.version import StrictVersion, LooseVersion
-
-    def compare_versions(version1, version2):
-        """ Copied from pip """
-        try:
-            return cmp(StrictVersion(version1), StrictVersion(version2))
-        # in case of abnormal version number, fall back to LooseVersion
-        except ValueError:
-            pass
-        try:
-            return cmp(LooseVersion(version1), LooseVersion(version2))
-        except TypeError:
-        # certain LooseVersion comparions raise due to unorderable types,
-        # fallback to string comparison
-            return cmp([str(v) for v in LooseVersion(version1).version],
-                       [str(v) for v in LooseVersion(version2).version])
 
 def do_diff(cov1, cov2, show_lines=False, include=[], exclude=[]):
     result = []
