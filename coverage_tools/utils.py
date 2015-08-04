@@ -25,8 +25,7 @@ from math import log10
 from fnmatch import fnmatch
 from coverage.backward import iitems
 from coverage.files import PathAliases
-from coverage.misc import CoverageException
-from coverage.summary import SummaryReporter
+from coverage.annotate import AnnotateReporter
 
 try:
     from pip.commands.search import compare_versions
@@ -74,78 +73,87 @@ def do_diff(cov1, cov2, show_lines=False, include=[], exclude=[]):
 
     return result
 
+class MyAnnotateReporter(AnnotateReporter):
+    def __init__(self, coverage, config):
+        super(MyAnnotateReporter, self).__init__(coverage, config)
+        self.show_lines = False
+        self.report_result = {}
+
+    def report(self, morfs, directory=None):
+        self.report_result = {}
+        super(MyAnnotateReporter, self).report(morfs, directory)
+
+    def annotate_file(self, cu, analysis):
+        """
+            Copied from the parent but returns a list
+            instead of writing to a file and doesn't return on
+            relative files.
+        """
+        source = cu.source_file()
+        dest = []
+
+        statements = analysis.statements
+        missing = analysis.missing
+        excluded = analysis.excluded
+
+        lineno = 0
+        i = 0
+        j = 0
+        covered = True
+        prefix = ""
+        while True:
+            line = source.readline()
+            if line == '':
+                break
+            lineno += 1
+            while i < len(statements) and statements[i] < lineno:
+                i += 1
+            while j < len(missing) and missing[j] < lineno:
+                j += 1
+            if i < len(statements) and statements[i] == lineno:
+                covered = j >= len(missing) or missing[j] > lineno
+            if self.blank_re.match(line):
+                prefix = '  '
+            elif self.else_re.match(line):
+                # Special logic for lines containing only 'else:'.
+                if i >= len(statements) and j >= len(missing):
+                    prefix = '! '
+                elif i >= len(statements) or j >= len(missing):
+                    prefix = '> '
+                elif statements[i] == missing[j]:
+                    prefix = '! '
+                else:
+                    prefix = '> '
+            elif lineno in excluded:
+                prefix = '- '
+            elif covered:
+                prefix = '> '
+            else:
+                prefix = '! '
+            if self.show_lines:
+                prefix = '{n: 6} {p}'.format(n=lineno, p=prefix)
+            dest.append(prefix + line.rstrip("\n"))
+        source.close()
+        self.report_result[cu.filename] = dest
+
+
 def annotate_sources(cov, show_lines=False, include=[], exclude=[]):
     """
         Returns a map of source files where
-        where missing lines are annotated with
-        - if missing and
-        + if executed.
+        missing lines are annotated with
     """
-    result = {}
-    reporter = SummaryReporter(cov, cov.config)
-    reporter.find_code_units(None)
-    for cu in reporter.code_units:
-        try:
-            src = []
-            source = cu.source_file().read().strip().split('\n')
+    cov.config.from_args(omit=exclude, include=include, ignore_errors=True)
 
-            # skip all files which are not marked for inclusion
-            skip_file = False
-            for pattern in include:
-                if fnmatch(cu.filename, pattern):
-                    skip_file = False
-                    break
-                else:
-                    skip_file = True
-                    # don't break b/c there can be multiple patterns and the
-                    # next one may include the file
-
-            # exclude all files which are marked for exclusion
-            for pattern in exclude:
-                if fnmatch(cu.filename, pattern):
-                    skip_file = True
-                    break
-
-            if skip_file:
-                continue
-
-            analysis = cov._analyze(cu)
-
-            executed = cov.data.executed_lines(cu.filename)
-            missing = sorted(set(analysis.statements) - set(executed))
-
-            i = 1
-            for line in source:
-#todo: for some reason in my coverage data the line for if statements and
-# function definitions are reported as missing
-                if i in missing:
-                    line = "- %s" % line
-                    rng = analysis.parser.multiline.get(i)
-                    if rng:
-                        missing += range(rng[0], rng[1]+1)
-                else:
-                    line = "+ %s" % line
-
-                # +1 b/c of log10, +1 leading space
-                width = int(log10(len(source))) + 2
-                if show_lines:
-                    line = '{n: {w}} {l}'.format(n=i, w=width, l=line)
-
-                src.append(line)
-                i += 1
-
-            result[cu.filename] = src
-        except CoverageException:
-#todo: if a source is missing locally it will not be included in the report
-            pass
-
-    return result
+    reporter = MyAnnotateReporter(cov, cov.config)
+    reporter.show_lines = show_lines
+    reporter.report(None)
+    return reporter.report_result
 
 def annotated_src_as_string(src):
     result = ""
     for fname in sorted(src.keys()):
-        result += '--- missing/%s\n' % fname.lstrip('/')
-        result += '+++ covered/%s\n' % fname.lstrip('/')
+        result += '!!! missing/%s\n' % fname.lstrip('/')
+        result += '>>> covered/%s\n' % fname.lstrip('/')
         for line in src[fname]:
             result += "%s\n" % line
 
