@@ -5,17 +5,23 @@ import shutil
 import tempfile
 from unittest import TestCase
 from coverage_tools import utils
+from coverage import __version__
 from coverage.misc import file_be_gone
 
 class CombineTestCase(TestCase):
     def setUp(self):
         dummy, self.output_file = tempfile.mkstemp()
 
+        if __version__.startswith("3."):
+            suff = "3x"
+        else:
+            suff = "4x"
+
         dummy, self.cov_data_1 = tempfile.mkstemp()
-        shutil.copy(os.path.abspath('tests/data/coverage.3x.1'), self.cov_data_1)
+        shutil.copy(os.path.abspath('tests/data/coverage.%s.1' % suff), self.cov_data_1)
 
         dummy, self.cov_data_2 = tempfile.mkstemp()
-        shutil.copy(os.path.abspath('tests/data/coverage.3x.2'), self.cov_data_2)
+        shutil.copy(os.path.abspath('tests/data/coverage.%s.2' % suff), self.cov_data_2)
 
 
     def tearDown(self):
