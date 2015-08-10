@@ -26,7 +26,7 @@ with open('README.rst') as file:
 
 config = {
     'name' : 'coverage-tools',
-    'version' : '0.0.2',
+    'version' : '0.0.3',
     'packages' : find_packages(),
     'scripts' : [
         'coverage-annotate',
