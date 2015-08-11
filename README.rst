@@ -12,6 +12,9 @@ Available tools include:
 * **coverage-combine** - combines several .coverage data files into one;
 * **coverage-diff** - compares the annotated sources from two coverage data files to
   highlight the difference in test coverage between them;
+* **coverage-report** - report on arbitrary file(s);
+* **pickle2json** - convert .coverage files from pickle to JSON format; Needs
+  coverage version 4.0 at least;
 
 
 Installation
@@ -25,6 +28,11 @@ Use pip to install from PyPI:
 
 Changelog
 =========
+
+Version 0.0.4
+
+* New tool **coverage-report**;
+* New tool **pickle2json**;
 
 Version 0.0.3
 

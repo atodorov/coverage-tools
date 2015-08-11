@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+
+# The MIT License (MIT)
+#
+# Copyright (c) 2015 Alexander Todorov <atodorov@nospam.otb.bg>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# Convert .coverage data files from pickle to JSON format
+
+import pickle
+from optparse import OptionParser
+
+def pickle_read_raw_data(cls, file_obj):
+    return pickle.load(file_obj)
+
+# we need the 4.0 version at least
+# otherwise there will be errors
+from coverage.data import CoverageData
+CoverageData._read_raw_data = pickle_read_raw_data
+
+def pickle2json(infile, outfile):
+    covdata = CoverageData()
+
+    inf = open(infile, 'rb')
+    covdata.read(inf)
+    inf.close()
+
+    covdata.write_file(outfile)
+
+
+if __name__ == "__main__":
+    parser = OptionParser(usage="usage: %s [options]" % __file__)
+    parser.add_option("-i", "--input-file", action="store", default=".coverage",
+                        help="Name of input file. Default .coverage")
+    parser.add_option("-o", "--output-file", action="store", default=".coverage",
+                        help="Name of output file. Default .coverage")
+
+    (options, args) = parser.parse_args()
+
+    pickle2json(options.input_file, options.output_file)
