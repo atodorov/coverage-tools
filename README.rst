@@ -7,7 +7,7 @@ and/or stats measurements of your test coverage.
 
 Available tools include:
 
-* **coverage-annotate** - prints the source code and prefixes each line with + or -
+* **coverage-annotate** - prints the source code and prefixes each line with > or !
   depending on wheather it was executed during testing or not;
 * **coverage-combine** - combines several .coverage data files into one;
 * **coverage-diff** - compares the annotated sources from two coverage data files to
